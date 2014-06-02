@@ -64,13 +64,19 @@ namespace Microsoft.Samples.Kinect.ControlBasics
             {
 		    Label = "Boxing"
             };
-	    button.Click += (object sender, RoutedEventArgs e) => {
-            RunGame();
-            e.Handled = true;
-
-	};
+            button.Click += (object sender, RoutedEventArgs e) =>
+            {
+                RunGame();
+                e.Handled = true;
+            };
             this.wrapPanel.Children.Add(button);
 
+            for (var index = 1; index < 10; ++index)
+            {
+                var unimplementedButton = new KinectTileButton { Label = "Exercise " +  (index + 1).ToString(CultureInfo.CurrentCulture) };
+                unimplementedButton.Click += KinectTileButtonClick;
+                this.wrapPanel.Children.Add(unimplementedButton);
+            }
             // Bind listner to scrollviwer scroll position change, and check scroll viewer position
             this.UpdatePagingButtonState();
             scrollViewer.ScrollChanged += (o, e) => this.UpdatePagingButtonState();
@@ -175,8 +181,7 @@ namespace Microsoft.Samples.Kinect.ControlBasics
         /// <param name="e">Event arguments</param>
         private void KinectTileButtonClick(object sender, RoutedEventArgs e)
         {
-            var button = (KinectTileButton)e.OriginalSource;
-            var selectionDisplay = new SelectionDisplay(button.Label as string);
+            var selectionDisplay = new SelectionDisplay("Unimplemented.");
             this.kinectRegionGrid.Children.Add(selectionDisplay);
             e.Handled = true;
         }

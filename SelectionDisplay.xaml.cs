@@ -16,7 +16,7 @@
         {
             this.InitializeComponent();
 
-            this.messageTextBlock.Text = string.Format(CultureInfo.CurrentCulture, Properties.Resources.SelectedMessage, itemId);
+            this.messageTextBlock.Text = itemId;
         }
 
         /// <summary>
