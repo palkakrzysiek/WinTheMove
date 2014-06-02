@@ -13,6 +13,8 @@ namespace Microsoft.Samples.Kinect.ControlBasics
     using Microsoft.Kinect;
     using Microsoft.Kinect.Toolkit;
     using Microsoft.Kinect.Toolkit.Controls;
+    using System.Windows.Media.Imaging;
+    using System.Windows.Media;
 
     /// <summary>
     /// Interaction logic for MainWindow
@@ -51,18 +53,25 @@ namespace Microsoft.Samples.Kinect.ControlBasics
             // Clear out placeholder content
             this.wrapPanel.Children.Clear();
 
-            // Add in display content
 	    /*
+            // Add in display content
             for (var index = 0; index < 300; ++index)
             {
                 var button = new KinectTileButton { Label = (index + 1).ToString(CultureInfo.CurrentCulture) };
                 this.wrapPanel.Children.Add(button);
             }
 	    */
-
+            BitmapImage bi = new BitmapImage();
+            bi.BeginInit();
+            bi.UriSource = new Uri(@"../Images/boxing-logo.png", UriKind.Relative);
+            bi.EndInit();
+	    SolidColorBrush mySolidColorBrush = new SolidColorBrush(Colors.White);
+	    mySolidColorBrush.Opacity = 0.45;
             var button = new KinectTileButton
             {
-		    Label = "Boxing"
+		    Label = "Boxing",
+		    LabelBackground = mySolidColorBrush,
+		    Background = new ImageBrush(bi)
             };
             button.Click += (object sender, RoutedEventArgs e) =>
             {
@@ -217,7 +226,8 @@ namespace Microsoft.Samples.Kinect.ControlBasics
         private void RunGame()
         {
 	    // System.Diagnostics.Process.Start( @"C:\Windows\System32\Notepad.exe" );
-	    System.Diagnostics.Process.Start(@"F:\team project\code\WinTheMove\Games\Boxing\bin\Debug\SkeletalTracking.exe");
+	    // System.Diagnostics.Process.Start(@"F:\team project\code\WinTheMove\Games\Boxing\bin\Debug\SkeletalTracking.exe");
+	    System.Diagnostics.Process.Start(@".\Boxing.exe");
             Application.Current.Shutdown();
         }
     }

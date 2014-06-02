@@ -242,22 +242,6 @@ namespace WinTheMove.Boxing
         }
 
 
-        private void btnangle_Click(object sender, RoutedEventArgs e)
-        {
-            if (kinectSensorChooser1.Kinect.ElevationAngle != (int)slider1.Value)
-            {
-                kinectSensorChooser1.Kinect.ElevationAngle = (int)slider1.Value;
-            }
-
-        }
-
-        private void slider1_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            int n = (int)slider1.Value;
-
-            Degree.Content = n.ToString();
-
-        }
 
         private void StopKinect(KinectSensor sensor)
         {

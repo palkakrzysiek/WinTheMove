@@ -9,7 +9,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.Samples.Kinect.ControlsBasics</RootNamespace>
-    <AssemblyName>ControlsBasics-WPF</AssemblyName>
+    <AssemblyName>GameSelector</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
     <FileAlignment>512</FileAlignment>
@@ -121,6 +121,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\icon16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\boxing-logo.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

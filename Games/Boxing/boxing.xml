@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<component>
+  <settings>
+    <variant>right</variant>
+    <twist>
+      <enabled>true</enabled>
+      <angle>
+        <start>30</start>
+        <target>0</target>
+        <tolerance>5</tolerance>
+      </angle>
+    </twist>
+    <pushing>
+      <enabled>true</enabled>
+      <distance>
+        <start>0</start>
+        <target>20</target>
+        <tolerance>3</tolerance>
+      </distance>
+    </pushing>
+    <lifting>
+      <enabled>true</enabled>
+      <distance>
+        <start>0</start>
+        <target>10</target>
+        <tolerance>3</tolerance>
+      </distance>
+    </lifting>
+  </settings>
+</component>

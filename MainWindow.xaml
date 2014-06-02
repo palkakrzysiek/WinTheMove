@@ -129,7 +129,11 @@
                     <WrapPanel VerticalAlignment="Center" x:Name="wrapPanel" Orientation="Vertical"  HorizontalAlignment="Center">
                         <!-- items for design layout.  They will be replaced at runtime. -->
                         <!-- items for design layout.  They will be replaced at runtime. -->
-                        <k:KinectTileButton Label="1"/>
+                        <k:KinectTileButton Label="1">
+                            <k:KinectTileButton.Background>
+                                <ImageBrush ImageSource="Images/boxing-logo.png"/>
+                            </k:KinectTileButton.Background>
+                        </k:KinectTileButton>
                         <k:KinectTileButton Label="2"/>
                         <k:KinectTileButton Label="3"/>
                         <k:KinectTileButton Label="4"/>
