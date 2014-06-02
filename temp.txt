@@ -1,0 +1,1 @@
+k:KinectTileButton.Click="KinectTileButtonClick"
