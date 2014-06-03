@@ -65,12 +65,14 @@ namespace Microsoft.Samples.Kinect.ControlBasics
             bi.BeginInit();
             bi.UriSource = new Uri(@"../Images/boxing-logo.png", UriKind.Relative);
             bi.EndInit();
-	    SolidColorBrush mySolidColorBrush = new SolidColorBrush(Colors.White);
-	    mySolidColorBrush.Opacity = 0.45;
+	    SolidColorBrush labelBackground = new SolidColorBrush(Colors.White);
+	    labelBackground.Opacity = 0.45;
+	    SolidColorBrush unimplementedExerciseBackground = new SolidColorBrush(Colors.Aqua);
+	    unimplementedExerciseBackground.Opacity = 0.35;
             var button = new KinectTileButton
             {
 		    Label = "Boxing",
-		    LabelBackground = mySolidColorBrush,
+		    LabelBackground = labelBackground,
 		    Background = new ImageBrush(bi)
             };
             button.Click += (object sender, RoutedEventArgs e) =>
@@ -84,6 +86,7 @@ namespace Microsoft.Samples.Kinect.ControlBasics
             {
                 var unimplementedButton = new KinectTileButton { Label = "Exercise " +  (index + 1).ToString(CultureInfo.CurrentCulture) };
                 unimplementedButton.Click += KinectTileButtonClick;
+		unimplementedButton.Background = unimplementedExerciseBackground;
                 this.wrapPanel.Children.Add(unimplementedButton);
             }
             // Bind listner to scrollviwer scroll position change, and check scroll viewer position

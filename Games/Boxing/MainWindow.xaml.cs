@@ -41,6 +41,9 @@ namespace WinTheMove.Boxing
         const int skeletonCount = 6; 
         Skeleton[] allSkeletons = new Skeleton[skeletonCount];
 
+        private int windowSizeX = 800;
+        private int windowSizeY = 600;
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // textInfo3.Text = ChooserHelper.returnPath();
@@ -273,7 +276,7 @@ namespace WinTheMove.Boxing
         private void ScalePosition(FrameworkElement element, Joint joint)
         {
             //convert the value to X/Y
-            Joint scaledJoint = joint.ScaleTo(1280, 720); 
+            Joint scaledJoint = joint.ScaleTo(windowSizeX, windowSizeY); 
             
             //convert & scale (.3 = means 1/3 of joint distance)
             //Joint scaledJoint = joint.ScaleTo(1280, 720, .3f, .3f);

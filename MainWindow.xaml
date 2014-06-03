@@ -9,11 +9,12 @@
         Title="WinTheMove"
         Closing="WindowClosing"
         mc:Ignorable="d"
-        d:DesignWidth="1200"
-        d:DesignHeight="700"
+        d:DesignWidth="800"
+        d:DesignHeight="600"
         MinWidth="500"
         MinHeight="700"
-        FontFamily="Segoe UI" Icon="Images/icon16.png"
+        FontFamily="Segoe UI"
+        Icon="Images/icon16.png"
         >
 
     <Window.Resources>
@@ -119,13 +120,13 @@
             <TextBlock HorizontalAlignment="Right" Margin="0,0,10,69" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}" FontSize="36" FontFamily="Calibri"><Run Language="pl-pl" Text="ETA: 3 min"/></TextBlock>
         </Grid>
 
-        <k:KinectRegion Grid.Row="1" x:Name="kinectRegion" Height="408" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" Width="1131">
+        <k:KinectRegion Grid.Row="1" x:Name="kinectRegion" Height="408" VerticalAlignment="Bottom" HorizontalAlignment="Center" Margin="0,0,0,10" >
             <Grid x:Name="kinectRegionGrid" Margin="10,0" Height="407">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*" />
                     <RowDefinition Height="170" />
                 </Grid.RowDefinitions>
-                <k:KinectScrollViewer Grid.Row="0" Name="scrollViewer" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="0,0,10,94" Grid.RowSpan="2" HorizontalAlignment="Right" Width="1090">
+                <k:KinectScrollViewer Grid.Row="0" Name="scrollViewer" HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Disabled" Margin="0,0,10,94" Grid.RowSpan="2" HorizontalAlignment="Left">
                     <WrapPanel VerticalAlignment="Center" x:Name="wrapPanel" Orientation="Vertical"  HorizontalAlignment="Center">
                         <!-- items for design layout.  They will be replaced at runtime. -->
                         <!-- items for design layout.  They will be replaced at runtime. -->

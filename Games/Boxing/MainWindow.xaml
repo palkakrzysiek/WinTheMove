@@ -1,7 +1,8 @@
 ﻿<Window x:Class="WinTheMove.Boxing.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow" Height="600" Width="800" Loaded="Window_Loaded" 
+        Title="Boxing" Height="600" Width="800" Loaded="Window_Loaded" 
+        Icon="Resources/icon16.png"
         xmlns:Controls="clr-namespace:Coding4Fun.Kinect.Wpf.Controls;assembly=Coding4Fun.Kinect.Wpf"
         xmlns:my="clr-namespace:Microsoft.Samples.Kinect.WpfViewers;assembly=Microsoft.Samples.Kinect.WpfViewers" 
         Closing="Window_Closing" >
