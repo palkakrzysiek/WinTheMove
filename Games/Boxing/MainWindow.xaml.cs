@@ -14,14 +14,17 @@ using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Drawing;
 using Microsoft.Kinect;
 using Coding4Fun.Kinect.Wpf;
 using Coding4Fun.Kinect;
 using System.IO;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
 
 
 
@@ -41,8 +44,9 @@ namespace WinTheMove.Boxing
         const int skeletonCount = 6; 
         Skeleton[] allSkeletons = new Skeleton[skeletonCount];
 
-        private int windowSizeX = 800;
-        private int windowSizeY = 600;
+
+        private const int windowSizeX = 800;
+        private const int windowSizeY = 600;
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
@@ -65,19 +69,21 @@ namespace WinTheMove.Boxing
 
             var parameters = new TransformSmoothParameters
             {
-                Smoothing = 0.3f,
-                Correction = 0.0f,
-                Prediction = 0.0f,
-                JitterRadius = 1.0f,
-                MaxDeviationRadius = 0.5f
+                Smoothing = 0.5f,
+                Correction = 0.5f,
+                Prediction = 0.5f,
+                JitterRadius = 0.05f,
+                MaxDeviationRadius = 0.04f
             };
             sensor.SkeletonStream.Enable(parameters);
 
-            sensor.SkeletonStream.Enable();
+            // sensor.SkeletonStream.Enable();
 
             sensor.AllFramesReady += new EventHandler<AllFramesReadyEventArgs>(sensor_AllFramesReady);
-            sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30); 
-            sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
+            // sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
+            sensor.DepthStream.Enable(DepthImageFormat.Resolution320x240Fps30);
+            sensor.DepthFrameReady += DepthFrameReady;
+            // sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
 
             try
             {
@@ -104,21 +110,82 @@ namespace WinTheMove.Boxing
                 return; 
             }
 
-            GetCameraPoint(first, e);
+            ExerciseVariant exercisevariant = ExerciseVariant.HandRight;
 
-            //set scaled position
-            ScalePosition(Head, first.Joints[JointType.Head]);
-            ScalePosition(LeftHand, first.Joints[JointType.HandLeft]);
-            ScalePosition(RightHand, first.Joints[JointType.HandRight]);
+            Rescale(first, exercisevariant);
 
-            //ProcessGesture(Data.Jonits[JointType.Head], Data.Joints[JointType.HandLeft], Data.Joints[JointType.HandRight]);
-
-            textInfo1.Text= getHorizonatalAngle(first, ExerciseVariant.HandRight).ToString() + "\n" +
-                getHigh(first, ExerciseVariant.HandRight);
-            
+            UpdateLabels(first, exercisevariant);
         }
 
-	public enum ExerciseVariant {HandLeft, HandRight};
+
+        private Joint GetGloveJoint(Skeleton skeleton, ExerciseVariant exercisevariant)
+        {
+            Joint scaledJoint;
+
+            switch (exercisevariant)
+            {
+                case ExerciseVariant.HandLeft:
+                    scaledJoint = skeleton.Joints[JointType.HandLeft];
+                    break;
+                case ExerciseVariant.HandRight:
+                default:
+                    scaledJoint = skeleton.Joints[JointType.HandRight];
+                    break;
+            }
+
+            return scaledJoint;
+
+        }
+
+        private void Rescale(Skeleton skeleton, ExerciseVariant exercisevariant)
+        {
+
+
+            //Divide by 2 for width and height so point is right in the middle 
+            // instead of in top/left corner
+            //Canvas.SetLeft(element, point.X - element.Width / 2);
+            //Canvas.SetTop(element, point.Y - element.Height / 2);
+
+            // Joint scaledJoint = joint.ScaleTo(windowSizeX, windowSizeY); 
+            Joint scaledJoint = GetGloveJoint(skeleton, exercisevariant);
+
+            const double scaleX = 1.0; // range of move
+            double scaleY = 1.0 * (Convert.ToDouble(windowSizeY)/Convert.ToDouble(windowSizeX)); // range of move
+            
+            //convert & scale (.3 = means 1/3 of joint distance)
+            //Joint scaledJoint = joint.ScaleTo(1280, 720, .3f, .3f);
+            double diffX = 0;
+            double diffY = 0;
+            int posX = 0;
+            int posY = 0;
+            double posYCorrection = -0.2f;
+            if (exercisevariant == ExerciseVariant.HandRight)
+            {
+                diffX = scaledJoint.Position.X - skeleton.Joints[JointType.ShoulderCenter].Position.X;
+                posX = 2 * Convert.ToInt32(scaleX * diffX * Convert.ToDouble(windowSizeX));
+            }
+            else
+            {
+                diffX = scaledJoint.Position.X - skeleton.Joints[JointType.ShoulderCenter].Position.X;
+                posX = 2 * Convert.ToInt32(scaleX * diffX * Convert.ToDouble(windowSizeX)) + windowSizeX / 2;
+            }
+            diffY = scaledJoint.Position.Y - skeleton.Joints[JointType.ShoulderCenter].Position.Y + posYCorrection;
+            posY = Convert.ToInt32(-2.0 * scaleY * diffY * Convert.ToDouble(windowSizeY));
+
+            double handMaxSize = 250; // pixels
+            double handMaxPutForward = 0.5f; // meters
+            double handMaxPutForwardPercentageSize = 0.5f; // percent
+            double handMinSize = handMaxPutForwardPercentageSize * handMaxSize;
+            double slope = (handMinSize - handMaxSize) / handMaxPutForward;
+
+            int handSize = Convert.ToInt32(slope * getWirstShoulderDistance(skeleton, exercisevariant, Axis.Z) + handMaxSize);
+            Hand.Width = handSize;
+            Hand.Height = handSize;
+
+            Canvas.SetLeft(Hand, posX - Hand.Width / 2);
+            Canvas.SetTop(Hand, posY - Hand.Width / 2); 
+        }
+
 
         private double getHorizonatalAngle(Skeleton skeleton, ExerciseVariant exercisevarinat)
         {
@@ -126,20 +193,32 @@ namespace WinTheMove.Boxing
             switch (exercisevarinat)
             {
                 case ExerciseVariant.HandLeft:
-                    leftPoint = skeleton.Joints[JointType.ShoulderCenter];
+                    leftPoint = skeleton.Joints[JointType.ShoulderRight];
                     centerPoint = skeleton.Joints[JointType.ShoulderLeft];
-                    rightPoint = skeleton.Joints[JointType.WristLeft];
+                    rightPoint = skeleton.Joints[JointType.HandLeft];
                     break;
                 case ExerciseVariant.HandRight:
                 default:
-                    leftPoint = skeleton.Joints[JointType.ShoulderCenter];
+                    leftPoint = skeleton.Joints[JointType.ShoulderLeft];
                     centerPoint = skeleton.Joints[JointType.ShoulderRight];
-                    rightPoint = skeleton.Joints[JointType.WristRight];
+                    rightPoint = skeleton.Joints[JointType.HandRight];
                     break;
             }
-            return MathsHelper.AngleBetweenJoints(leftPoint, centerPoint, rightPoint, Axis.X, Axis.Z) - 90;
+            textInfo1.Text = "left\n";
+            textInfo1.Text += leftPoint.Position.X + "\n";
+            textInfo1.Text += leftPoint.Position.Y + "\n";
+            textInfo1.Text += leftPoint.Position.Z + "\n";
+            textInfo2.Text = "center\n";
+            textInfo2.Text += centerPoint.Position.X + "\n";
+            textInfo2.Text += centerPoint.Position.Y + "\n";
+            textInfo2.Text += centerPoint.Position.Z + "\n";
+            textInfo3.Text = "right\n";
+            textInfo3.Text += rightPoint.Position.X + "\n";
+            textInfo3.Text += rightPoint.Position.Y + "\n";
+            textInfo3.Text += rightPoint.Position.Z + "\n";
+            return -1 * (MathsHelper.AngleBetweenJoints(leftPoint, centerPoint, rightPoint, Axis.X, Axis.Z) - 180); // 0 when straight angle, increase when twisting
         }
-        private double getHigh(Skeleton skeleton, ExerciseVariant exercisevarinat)
+        private double getWirstShoulderDistance(Skeleton skeleton, ExerciseVariant exercisevarinat, Axis axis)
         {
             Joint firstPoint, secondPoint;
             switch (exercisevarinat)
@@ -154,71 +233,17 @@ namespace WinTheMove.Boxing
                     secondPoint = skeleton.Joints[JointType.WristRight];
                     break;
             }
-            return MathsHelper.DistanceBetweenPoints(firstPoint, secondPoint, Axis.Y);
+
+            return MathsHelper.DistanceBetweenPoints(firstPoint, secondPoint, axis) ;
         }
 
-        private void ProcessGesture(Joint center, Joint leftPoint, Joint rightPoint)
+        private void UpdateLabels(Skeleton skeleton, ExerciseVariant exercisevariant)
         {
-            textInfo1.Text = "center\n";
-            textInfo1.Text += "\n" + center.Position.X;
-            textInfo1.Text += "\n" + center.Position.Y;
-            textInfo1.Text += "\n" + center.Position.Z;
-            textInfo2.Text = "left\n";
-            textInfo2.Text += "\n" + leftPoint.Position.X;
-            textInfo2.Text += "\n" + leftPoint.Position.Y;
-            textInfo2.Text += "\n" + leftPoint.Position.Z;
-            textInfo3.Text = "right\n";
-            textInfo3.Text += "\n" + rightPoint.Position.X;
-            textInfo3.Text += "\n" + rightPoint.Position.Y;
-            textInfo3.Text += "\n" + rightPoint.Position.Z;
-            textInfo3.Text += "\nAngle:\n" + MathsHelper.AngleBetweenJoints(center, leftPoint, rightPoint);
-        }
-
-        void GetCameraPoint(Skeleton first, AllFramesReadyEventArgs e)
-        {
-
-            using (DepthImageFrame depth = e.OpenDepthImageFrame())
-            {
-                if (depth == null ||
-                    kinectSensorChooser1.Kinect == null)
-                {
-                    return;
-                }
-                
-
-                //Map a joint location to a point on the depth map
-                //head
-                DepthImagePoint headDepthPoint =
-                    depth.MapFromSkeletonPoint(first.Joints[JointType.Head].Position);
-                //left hand
-                DepthImagePoint leftDepthPoint =
-                    depth.MapFromSkeletonPoint(first.Joints[JointType.HandLeft].Position);
-                //right hand
-                DepthImagePoint rightDepthPoint =
-                    depth.MapFromSkeletonPoint(first.Joints[JointType.HandRight].Position);
-
-
-                //Map a depth point to a point on the color image
-                //head
-                ColorImagePoint headColorPoint =
-                    depth.MapToColorImagePoint(headDepthPoint.X, headDepthPoint.Y,
-                    ColorImageFormat.RgbResolution640x480Fps30);
-                //left hand
-                ColorImagePoint leftColorPoint =
-                    depth.MapToColorImagePoint(leftDepthPoint.X, leftDepthPoint.Y,
-                    ColorImageFormat.RgbResolution640x480Fps30);
-                //right hand
-                ColorImagePoint rightColorPoint =
-                    depth.MapToColorImagePoint(rightDepthPoint.X, rightDepthPoint.Y,
-                    ColorImageFormat.RgbResolution640x480Fps30);
-
-
-                //Set location
-                CameraPosition(Head, headColorPoint);
-                CameraPosition(LeftHand, leftColorPoint);
-                CameraPosition(RightHand, rightColorPoint);
-
-            }        
+            // textInfo1.Text= getHorizonatalAngle(first, ExerciseVariant.HandRight).ToString() + "\n" +
+              //  getHigh(first, ExerciseVariant.HandRight);
+            horizontalDistanceLabel.Content = String.Format("{0:0.0} cm", getWirstShoulderDistance(skeleton, exercisevariant, Axis.Z) * 100);
+            verticalDistanceLabel.Content = String.Format("{0:0.0} cm", getWirstShoulderDistance(skeleton, exercisevariant, Axis.Y) * -100);
+            angleLabel.Content = String.Format("{0:0}°", getHorizonatalAngle(skeleton, exercisevariant)); // 0, 2, 4, ...
         }
 
 
@@ -286,6 +311,57 @@ namespace WinTheMove.Boxing
             
         }
 
+        Bitmap DepthToBitmap(DepthImageFrame imageFrame)
+        {
+            short[] pixelData = new short[imageFrame.PixelDataLength];
+            imageFrame.CopyPixelDataTo(pixelData);
+
+            Bitmap bmap = new Bitmap(
+            imageFrame.Width,
+            imageFrame.Height,
+            System.Drawing.Imaging.PixelFormat.Format16bppRgb555);
+
+            BitmapData bmapdata = bmap.LockBits(
+             new System.Drawing.Rectangle(0, 0, imageFrame.Width,
+                                    imageFrame.Height),
+             ImageLockMode.WriteOnly,
+             bmap.PixelFormat);
+            IntPtr ptr = bmapdata.Scan0;
+            Marshal.Copy(pixelData,
+             0,
+             ptr,
+             imageFrame.Width *
+               imageFrame.Height);
+            bmap.UnlockBits(bmapdata);
+            return bmap;
+        }
+        BitmapSource DepthToBitmapSource(
+                DepthImageFrame imageFrame)
+        {
+            short[] pixelData = new short[imageFrame.PixelDataLength];
+            imageFrame.CopyPixelDataTo(pixelData);
+
+            BitmapSource bmap = BitmapSource.Create(
+             imageFrame.Width,
+             imageFrame.Height,
+             96, 96,
+             PixelFormats.Gray16,
+             null,
+             pixelData,
+             imageFrame.Width * imageFrame.BytesPerPixel);
+            return bmap;
+        }
+        void DepthFrameReady(object sender,
+           DepthImageFrameReadyEventArgs e)
+        {
+            DepthImageFrame imageFrame =
+                                e.OpenDepthImageFrame();
+            if (imageFrame != null)
+            {
+                dephPreview.Source = DepthToBitmapSource(
+                                               imageFrame);
+            }
+        }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {

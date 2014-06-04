@@ -193,7 +193,7 @@ namespace Microsoft.Samples.Kinect.ControlBasics
         /// <param name="e">Event arguments</param>
         private void KinectTileButtonClick(object sender, RoutedEventArgs e)
         {
-            var selectionDisplay = new SelectionDisplay("Unimplemented.");
+            var selectionDisplay = new SelectionDisplay("You've finished this exercise for today.");
             this.kinectRegionGrid.Children.Add(selectionDisplay);
             e.Handled = true;
         }

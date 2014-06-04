@@ -12,10 +12,31 @@ namespace WinTheMove.Boxing
     {
         public static double DistanceBetweenPoints(Joint j1, Joint j2, params Axis[] axes)
         {
-            double shrhX = axes.Contains(Axis.X) ? j1.Position.X - j2.Position.X : 0;
-            double shrhY = axes.Contains(Axis.Y) ? j1.Position.Y - j2.Position.Y : 0;
-            double shrhZ = axes.Contains(Axis.Z) ? j1.Position.Z - j2.Position.Z : 0;
-            return vectorNorm(shrhX, shrhY, shrhZ);
+            double shrhX = 0;
+            double shrhY = 0;
+            double shrhZ = 0;
+
+            int sign = 1;
+
+            if (axes.Contains(Axis.X))
+            {
+                shrhX = j1.Position.X - j2.Position.X;
+                sign *= shrhX < 0 ? -1 : 1;
+            }
+
+            if (axes.Contains(Axis.Y))
+            {
+                shrhY = j1.Position.Y - j2.Position.Y;
+                sign *= shrhY < 0 ? -1 : 1;
+            }
+
+            if (axes.Contains(Axis.Z))
+            {
+                shrhZ = j1.Position.Z - j2.Position.Z;
+                sign *= shrhZ < 0 ? -1 : 1;
+            }
+            
+            return vectorNorm(shrhX, shrhY, shrhZ) * sign;
         }
         public static double AngleBetweenJoints(Joint j1, Joint j2, Joint j3, params Axis[] axes)
         {

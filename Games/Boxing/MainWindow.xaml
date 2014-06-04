@@ -7,26 +7,32 @@
         xmlns:my="clr-namespace:Microsoft.Samples.Kinect.WpfViewers;assembly=Microsoft.Samples.Kinect.WpfViewers" 
         Closing="Window_Closing" >
     <Grid x:Name="theGrid">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="649*" />
-            <ColumnDefinition Width="319*" />
-            <ColumnDefinition Width="0*" />
-        </Grid.ColumnDefinitions>
-        <Canvas Background="Transparent" Height="561" VerticalAlignment="Top" Grid.ColumnSpan="2">
-            <TextBlock FontSize="20" FontWeight="Bold" Name="textBlock5" Text="debug" TextAlignment="Center" Width="406" Canvas.Left="-38" Canvas.Top="537" />
-            <TextBlock Canvas.Left="366" Canvas.Top="502" Height="48" Name="textBlock11" Text="TextBlock" Background="White" Foreground="White" Width="146" />
-            <Ellipse Height="50" Width="50" Name="RightHand" Canvas.Left="483" Canvas.Top="113">
+        <Canvas Height="570" VerticalAlignment="Top">
+            <Canvas.Background>
+                <ImageBrush ImageSource="Resources/background.jpg"/>
+            </Canvas.Background>
+            <Image x:Name="dephPreview" Height="93" Canvas.Left="42" Canvas.Top="446" Width="136" Opacity="0.3"/>
+            <Ellipse Height="250" Width="250" x:Name="Hand" Canvas.Left="483" Canvas.Top="113" RenderTransformOrigin="0.433,0.28">
                 <Ellipse.Fill>
-                    <ImageBrush ImageSource="/Resources/hand.png" />
+                    <ImageBrush ImageSource="/Resources/glove.png" />
                 </Ellipse.Fill>
             </Ellipse>
+            <!--
             <Ellipse Height="30" Width="30" Name="LeftHand" Canvas.Left="427" Canvas.Top="89" Fill="#FF3DD625"/>
             <Ellipse Height="30" Width="30" Name="Head" Canvas.Left="373" Canvas.Top="133" Fill="Red" />
+            -->
 
-            <my:KinectSensorChooser Canvas.Left="42" Canvas.Top="286" Name="kinectSensorChooser1" Width="693" Height="211" />
-            <TextBlock x:Name="textInfo1" Height="198" Canvas.Left="42" TextWrapping="Wrap" Text="Instructions" Canvas.Top="20" Width="167" FontSize="16" FontFamily="Consolas"/>
-            <TextBlock x:Name="textInfo2" Height="198" Canvas.Left="201" TextWrapping="Wrap" Text="Instructions" Canvas.Top="20" Width="167" FontSize="16" FontFamily="Consolas"/>
-            <TextBlock x:Name="textInfo3" Height="198" Canvas.Left="366" TextWrapping="Wrap" Text="Instructions" Canvas.Top="20" Width="167" FontSize="16" FontFamily="Consolas"/>
+            <my:KinectSensorChooser Canvas.Left="42" Canvas.Top="258" Name="kinectSensorChooser1" Width="693" Height="211" Visibility="Hidden" />
+            <TextBlock x:Name="textInfo1" Height="102" Canvas.Left="10" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="127" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Hidden"/>
+            <TextBlock x:Name="textInfo2" Height="102" Canvas.Left="141" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="126" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Hidden"/>
+            <TextBlock x:Name="textInfo3" Height="102" Canvas.Left="271" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="127" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Hidden"/>
+            <Canvas Height="161" Canvas.Left="572" Canvas.Top="378" Width="182" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+                <Image Height="157" Width="136" Source="Resources/armsstats.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Canvas.Left="27" Canvas.Top="6"/>
+                <Label x:Name="angleLabel" Content="30°" Canvas.Top="84" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741"/>
+                <Label x:Name="verticalDistanceLabel" Content="10 cm" Canvas.Top="10" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Canvas.Left="45"/>
+                <Label x:Name="horizontalDistanceLabel" Content="15 cm" Canvas.Top="114" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Canvas.Left="105"/>
+            </Canvas>
+
         </Canvas>
     </Grid>
 </Window>
