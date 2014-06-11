@@ -1,29 +1,44 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<component>
+<component enabled="ture">
   <settings>
     <variant>right</variant>
     <twist>
       <enabled>true</enabled>
       <angle>
+        <!-- Base angle, when arm is its position repetition starts to be counted -->
         <start>30</start>
+        <!-- Target angle, when arm is its position repetition will be counted -->
         <target>0</target>
+        <!-- Error margin for above angles -->
         <tolerance>5</tolerance>
+        <!-- Number of reperirions -->
+        <repetitions>5</repetitions>
       </angle>
     </twist>
     <pushing>
       <enabled>true</enabled>
       <distance>
+        <!-- Base angle, when arm is its position repetition starts to be counted -->
         <start>0</start>
+        <!-- Target angle, when arm is its position repetition will be counted -->
         <target>20</target>
+        <!-- Error margin for above angles -->
         <tolerance>3</tolerance>
+        <!-- Number of reperirions -->
+        <repetitions>5</repetitions>
       </distance>
     </pushing>
     <lifting>
       <enabled>true</enabled>
       <distance>
+        <!-- Base angle, when arm is its position repetition starts to be counted -->
         <start>0</start>
+        <!-- Target angle, when arm is its position repetition will be counted -->
         <target>10</target>
+        <!-- Error margin for above angles -->
         <tolerance>3</tolerance>
+        <!-- Number of reperirions -->
+        <repetitions>5</repetitions>
       </distance>
     </lifting>
   </settings>

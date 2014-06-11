@@ -35,15 +35,12 @@ namespace WinTheMove.Boxing
     /// </summary>
     public partial class MainWindow : Window
     {
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
 
         bool closing = false;
         const int skeletonCount = 6; 
         Skeleton[] allSkeletons = new Skeleton[skeletonCount];
 
+        Hand hand;
 
         private const int windowSizeX = 800;
         private const int windowSizeY = 600;
@@ -69,11 +66,19 @@ namespace WinTheMove.Boxing
 
             var parameters = new TransformSmoothParameters
             {
+                /* little smoothing
                 Smoothing = 0.5f,
                 Correction = 0.5f,
                 Prediction = 0.5f,
                 JitterRadius = 0.05f,
                 MaxDeviationRadius = 0.04f
+                */
+
+                Smoothing = 0.5f,
+                Correction = 0.5f,
+                Prediction = 0.5f,
+                JitterRadius = 1.00f,
+                MaxDeviationRadius = 0.4f
             };
             sensor.SkeletonStream.Enable(parameters);
 
@@ -112,9 +117,17 @@ namespace WinTheMove.Boxing
 
             ExerciseVariant exercisevariant = ExerciseVariant.HandRight;
 
+            SetObjectToDestroy();
             Rescale(first, exercisevariant);
 
             UpdateLabels(first, exercisevariant);
+            // UpdatePosition(first, exercisevariant);
+        }
+
+        void SetObjectToDestroy()
+        {
+            Ellipse objectToDestroy = new Ellipse();
+
         }
 
 
@@ -125,40 +138,145 @@ namespace WinTheMove.Boxing
             switch (exercisevariant)
             {
                 case ExerciseVariant.HandLeft:
-                    scaledJoint = skeleton.Joints[JointType.HandLeft];
+                    scaledJoint = skeleton.Joints[JointType.WristLeft];
                     break;
                 case ExerciseVariant.HandRight:
                 default:
-                    scaledJoint = skeleton.Joints[JointType.HandRight];
+                    scaledJoint = skeleton.Joints[JointType.WristRight];
                     break;
             }
 
             return scaledJoint;
+        }
+
+        private Joint GetShoulderJoint(Skeleton skeleton, ExerciseVariant exercisevariant)
+        {
+            Joint scaledJoint;
+
+            switch (exercisevariant)
+            {
+                case ExerciseVariant.HandLeft:
+                    scaledJoint = skeleton.Joints[JointType.ShoulderLeft];
+                    break;
+                case ExerciseVariant.HandRight:
+                default:
+                    scaledJoint = skeleton.Joints[JointType.ShoulderRight];
+                    break;
+            }
+
+            return scaledJoint;
+        }
+        double shiftFromLeft;
+        double protruding;
+
+        private double getPlayerRotationAngle(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        {
+            Joint ShoulderLeft = skeleton.Joints[JointType.ShoulderLeft];
+            Joint ShoulderRight = skeleton.Joints[JointType.ShoulderRight];
+            double hypotenuseLength = Math.Abs(MathsHelper.DistanceBetweenPoints(ShoulderLeft, ShoulderRight, Axis.X, Axis.Z));
+            double oppositeSideLength = MathsHelper.DistanceBetweenPoints(ShoulderLeft, ShoulderRight, Axis.Z);
+            double playerRotationAngle = Math.Asin(oppositeSideLength / hypotenuseLength);// / Math.PI * 180;
+            return playerRotationAngle;
+        }
+
+        private double getProtrudingDistance(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        {
+            Joint handJoint = GetGloveJoint(skeleton, exerciseVariant);
+            Joint shoulderJoint = GetShoulderJoint(skeleton, exerciseVariant);
+            double protrudingLength = Math.Abs(MathsHelper.DistanceBetweenPoints(shoulderJoint, handJoint, Axis.X, Axis.Z));
+            return protrudingLength;
+        }
+
+        private double getHandHorizontalPositon(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        {
+            double protrudingLength = getProtrudingDistance(skeleton, exerciseVariant);
+
+            double angle;
+            if (exerciseVariant == ExerciseVariant.HandRight)
+            {
+                angle = 180 - getHorizonatalAngle(skeleton, exerciseVariant);
+            }
+            else
+            {
+                angle = getHorizonatalAngle(skeleton, exerciseVariant);
+            }
+            double positionX = - (protrudingLength * Math.Cos(angle/180*Math.PI));
+            textInfo1.Text = "debug\n" + positionX;
+            return positionX;
+        }
+
+        private void UpdatePosition(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        {
+            Joint ShoulderLeft = skeleton.Joints[JointType.ShoulderLeft];
+            Joint ShoulderRight = skeleton.Joints[JointType.ShoulderRight];
+            Joint ShoulderCenter = skeleton.Joints[JointType.ShoulderCenter];
+            Joint handJoint = GetGloveJoint(skeleton, exerciseVariant);
+            Joint shoulderJoint = GetShoulderJoint(skeleton, exerciseVariant);
+            double hypotenuseLength = Math.Abs(MathsHelper.DistanceBetweenPoints(ShoulderLeft, ShoulderRight, Axis.X, Axis.Z));
+            double oppositeSideLength = MathsHelper.DistanceBetweenPoints(ShoulderLeft, ShoulderRight, Axis.Z);
+            double playerRotationAngle = Math.Asin(oppositeSideLength / hypotenuseLength);// / Math.PI * 180;
+            double protrudingLength = Math.Abs(MathsHelper.DistanceBetweenPoints(shoulderJoint, handJoint, Axis.X, Axis.Z));
+            double angle;
+            double armLength = 0.6f;
+            int leftDisplayMargin = 100;
+            int rightDisplayMargin = 100;
+            int centimetersPerMeter = 100;
+            if (exerciseVariant == ExerciseVariant.HandRight)
+            {
+                angle = 180 - getHorizonatalAngle(skeleton, exerciseVariant);
+            }
+            else
+            {
+                angle = getHorizonatalAngle(skeleton, exerciseVariant);
+            }
+            // double positionX = (protrudingLength * angle);
+            double positionX = (protrudingLength * angle) / armLength / centimetersPerMeter * (windowSizeX - leftDisplayMargin - rightDisplayMargin) + leftDisplayMargin;
+            textInfo1.Text = "protruding: " + protrudingLength + "\nposX: " + positionX + "\nrot: " + playerRotationAngle;
+            shiftFromLeft = positionX;
+            protruding = protrudingLength;
+/*
+            // textInfo1.Text = "hyp: " + hypotenuseLength + "\nopp: " + oppositeSideLength + "\nrot: " + playerRotationAngle;
+
+            double xShift = MathsHelper.DistanceBetweenPoints(handJoint, ShoulderCenter, Axis.X);
+            double zShift = MathsHelper.DistanceBetweenPoints(ShoulderCenter, handJoint, Axis.Z);
+            pushedForward = zShift * Math.Cos(playerRotationAngle) - xShift * Math.Sin(playerRotationAngle);
+           // pushedForward = zShift - xShift / Math.Tan(pl)
+            double temp1 = pushedForward / Math.Cos(playerRotationAngle);
+            double temp2 = zShift - temp1;
+            double temp3 = Math.Sqrt(temp2 * temp2 + xShift * xShift);
+            // double temp4 = Math.Sqrt(temp1 * temp1 + pushedForward * pushedForward - 2 * temp1 * pushedForward * Math.Cos(playerRotationAngle));
+            double temp4 = Math.Sqrt(temp1 * temp1 - pushedForward * pushedForward);
+            double realShift = temp3 + temp4;
+
+            textInfo1.Text += "\nxShift: " + xShift;
+            textInfo1.Text += "\nyShift: " + zShift;
+            textInfo1.Text += "\nforward: " + pushedForward;
+            textInfo1.Text += "\nshift: " + realShift;
+            */
+
 
         }
 
-        private void Rescale(Skeleton skeleton, ExerciseVariant exercisevariant)
+        private void Rescale(Skeleton skeleton, ExerciseVariant exerciseVariant)
         {
 
-
-            //Divide by 2 for width and height so point is right in the middle 
-            // instead of in top/left corner
-            //Canvas.SetLeft(element, point.X - element.Width / 2);
-            //Canvas.SetTop(element, point.Y - element.Height / 2);
-
-            // Joint scaledJoint = joint.ScaleTo(windowSizeX, windowSizeY); 
-            Joint scaledJoint = GetGloveJoint(skeleton, exercisevariant);
+            Joint scaledJoint = GetGloveJoint(skeleton, exerciseVariant);
 
             const double scaleX = 1.0; // range of move
             double scaleY = 1.0 * (Convert.ToDouble(windowSizeY)/Convert.ToDouble(windowSizeX)); // range of move
             
-            //convert & scale (.3 = means 1/3 of joint distance)
-            //Joint scaledJoint = joint.ScaleTo(1280, 720, .3f, .3f);
             double diffX = 0;
             double diffY = 0;
             int posX = 0;
             int posY = 0;
             double posYCorrection = -0.2f;
+            double armLength = 0.6f;
+            int leftDisplayMargin = 100;
+            int rightDisplayMargin = 100;
+            int centimetersPerMeter = 100;
+            double horizontalPosition = getHandHorizontalPositon(skeleton, exerciseVariant);
+            posX = Convert.ToInt32((horizontalPosition + armLength/2)/ armLength * (windowSizeX - leftDisplayMargin - rightDisplayMargin) + leftDisplayMargin);
+            /*
             if (exercisevariant == ExerciseVariant.HandRight)
             {
                 diffX = scaledJoint.Position.X - skeleton.Joints[JointType.ShoulderCenter].Position.X;
@@ -169,21 +287,22 @@ namespace WinTheMove.Boxing
                 diffX = scaledJoint.Position.X - skeleton.Joints[JointType.ShoulderCenter].Position.X;
                 posX = 2 * Convert.ToInt32(scaleX * diffX * Convert.ToDouble(windowSizeX)) + windowSizeX / 2;
             }
+            */
             diffY = scaledJoint.Position.Y - skeleton.Joints[JointType.ShoulderCenter].Position.Y + posYCorrection;
             posY = Convert.ToInt32(-2.0 * scaleY * diffY * Convert.ToDouble(windowSizeY));
 
             double handMaxSize = 250; // pixels
             double handMaxPutForward = 0.5f; // meters
-            double handMaxPutForwardPercentageSize = 0.5f; // percent
+            double handMaxPutForwardPercentageSize = 0.5f; // percent / 100
             double handMinSize = handMaxPutForwardPercentageSize * handMaxSize;
             double slope = (handMinSize - handMaxSize) / handMaxPutForward;
 
-            int handSize = Convert.ToInt32(slope * getWirstShoulderDistance(skeleton, exercisevariant, Axis.Z) + handMaxSize);
-            Hand.Width = handSize;
-            Hand.Height = handSize;
+            int handSize = Convert.ToInt32(slope * getProtrudingDistance(skeleton, exerciseVariant) + handMaxSize);
+            HandImage.Width = handSize;
+            HandImage.Height = handSize;
 
-            Canvas.SetLeft(Hand, posX - Hand.Width / 2);
-            Canvas.SetTop(Hand, posY - Hand.Width / 2); 
+            Canvas.SetLeft(HandImage, posX - HandImage.Width / 2);
+            Canvas.SetTop(HandImage, posY - HandImage.Width / 2); 
         }
 
 
@@ -204,6 +323,7 @@ namespace WinTheMove.Boxing
                     rightPoint = skeleton.Joints[JointType.HandRight];
                     break;
             }
+        /*
             textInfo1.Text = "left\n";
             textInfo1.Text += leftPoint.Position.X + "\n";
             textInfo1.Text += leftPoint.Position.Y + "\n";
@@ -216,8 +336,27 @@ namespace WinTheMove.Boxing
             textInfo3.Text += rightPoint.Position.X + "\n";
             textInfo3.Text += rightPoint.Position.Y + "\n";
             textInfo3.Text += rightPoint.Position.Z + "\n";
+
+            */
             return -1 * (MathsHelper.AngleBetweenJoints(leftPoint, centerPoint, rightPoint, Axis.X, Axis.Z) - 180); // 0 when straight angle, increase when twisting
         }
+        /*
+        private double getHorizonatalAngle(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        {
+            Joint handJoint = GetGloveJoint(skeleton, exerciseVariant);
+            Joint shoulderJoint = GetShoulderJoint(skeleton, exerciseVariant);
+            double hypotenuseLength = Math.Abs(MathsHelper.DistanceBetweenPoints(shoulderJoint, handJoint, Axis.X, Axis.Z));
+            double oppositeSideLength = MathsHelper.DistanceBetweenPoints(shoulderJoint, handJoint, Axis.X);
+            double playerRotationAngle = getPlayerRotationAngle(skeleton, exerciseVariant);
+            int shift = (handJoint.Position.X - shoulderJoint.Position.X < 0) ? -1 : 0;// negative if in II quater
+            double ratio = oppositeSideLength / hypotenuseLength ;
+            ratio = ratio < -1 ? -1 : ratio;
+            ratio = ratio > 1 ? 1 : ratio;
+            double horizontalAngle = Math.Acos(ratio);
+            textInfo1.Text = "\n" + hypotenuseLength + "\n" + oppositeSideLength + "\n" + playerRotationAngle + "\n" + oppositeSideLength/hypotenuseLength + "\n" + horizontalAngle;
+            return (horizontalAngle) / Math.PI * 180;
+        }
+       */
         private double getWirstShoulderDistance(Skeleton skeleton, ExerciseVariant exercisevarinat, Axis axis)
         {
             Joint firstPoint, secondPoint;

@@ -9,10 +9,15 @@
     <Grid x:Name="theGrid">
         <Canvas Height="570" VerticalAlignment="Top">
             <Canvas.Background>
-                <ImageBrush ImageSource="Resources/background.jpg"/>
+                <ImageBrush ImageSource="Resources/bg2.jpg"/>
             </Canvas.Background>
             <Image x:Name="dephPreview" Height="93" Canvas.Left="42" Canvas.Top="446" Width="136" Opacity="0.3"/>
-            <Ellipse Height="250" Width="250" x:Name="Hand" Canvas.Left="483" Canvas.Top="113" RenderTransformOrigin="0.433,0.28">
+            <Rectangle  Height="130" Width="130" x:Name="ObjectToDestroyImage" Canvas.Left="160" Canvas.Top="227" RenderTransformOrigin="0.433,0.28">
+                <Rectangle.Fill>
+                    <ImageBrush ImageSource="Resources/orange.png" />
+                </Rectangle.Fill>
+            </Rectangle>
+            <Ellipse Height="250" Width="250" x:Name="HandImage" Canvas.Left="485" Canvas.Top="107" RenderTransformOrigin="0.433,0.28">
                 <Ellipse.Fill>
                     <ImageBrush ImageSource="/Resources/glove.png" />
                 </Ellipse.Fill>
@@ -23,14 +28,14 @@
             -->
 
             <my:KinectSensorChooser Canvas.Left="42" Canvas.Top="258" Name="kinectSensorChooser1" Width="693" Height="211" Visibility="Hidden" />
-            <TextBlock x:Name="textInfo1" Height="102" Canvas.Left="10" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="127" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Hidden"/>
+            <TextBlock x:Name="textInfo1" Height="199" Canvas.Left="10" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="388" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4"/>
             <TextBlock x:Name="textInfo2" Height="102" Canvas.Left="141" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="126" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Hidden"/>
             <TextBlock x:Name="textInfo3" Height="102" Canvas.Left="271" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="127" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Hidden"/>
-            <Canvas Height="161" Canvas.Left="572" Canvas.Top="378" Width="182" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+            <Canvas Height="161" Canvas.Left="585" Canvas.Top="399" Width="182" HorizontalAlignment="Right" VerticalAlignment="Bottom">
                 <Image Height="157" Width="136" Source="Resources/armsstats.png" HorizontalAlignment="Right" VerticalAlignment="Bottom" Canvas.Left="27" Canvas.Top="6"/>
-                <Label x:Name="angleLabel" Content="30°" Canvas.Top="84" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741"/>
-                <Label x:Name="verticalDistanceLabel" Content="10 cm" Canvas.Top="10" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Canvas.Left="45"/>
-                <Label x:Name="horizontalDistanceLabel" Content="15 cm" Canvas.Top="114" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Canvas.Left="105"/>
+                <Label x:Name="angleLabel" Content="30°" Canvas.Top="84" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Foreground="#FFFFE295"/>
+                <Label x:Name="verticalDistanceLabel" Content="10.0 cm" Canvas.Top="10" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Canvas.Left="45" Foreground="#FFFFE295"/>
+                <Label x:Name="horizontalDistanceLabel" Content="15.0 cm" Canvas.Top="114" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Canvas.Left="105" Background="{x:Null}" Foreground="#FFFFE295"/>
             </Canvas>
 
         </Canvas>
