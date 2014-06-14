@@ -25,7 +25,8 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
-
+using System.Threading.Tasks;
+using System.Threading;
 
 
 namespace WinTheMove.Boxing
@@ -33,6 +34,32 @@ namespace WinTheMove.Boxing
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
+    //<Namespace>.Utilities.Extensions
+
+
+
+
+    struct RepetitionCounter
+    {
+        public int twistsDone { get; internal set; }
+        public int liftsDone { get; internal set; }
+        public int pushesDone { get; internal set; }
+        /*
+        public RepetitionCounter()
+        {
+            twistsDone = 0;
+            liftsDone = 0;
+            pushesDone = 0;
+        }
+        */
+
+        public void TwistDone() { twistsDone++; }
+        public void LiftDone() { liftsDone++; }
+        public void PushDone() { pushesDone++; }
+    }
+
+
+
     public partial class MainWindow : Window
     {
 
@@ -40,15 +67,104 @@ namespace WinTheMove.Boxing
         const int skeletonCount = 6; 
         Skeleton[] allSkeletons = new Skeleton[skeletonCount];
 
-        Hand hand;
+
+
+
+        private ExerciseSettings exerciseSettings;
 
         private const int windowSizeX = 800;
         private const int windowSizeY = 600;
 
+
+        Hand hand;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            // textInfo3.Text = ChooserHelper.returnPath();
+            InitializeExerciseSettings();
+//            textInfo1.Text = "debug\n" + o.ToString();
+            hand = new Hand(HandImage, 10, 10, 10); 
             kinectSensorChooser1.KinectSensorChanged += new DependencyPropertyChangedEventHandler(kinectSensorChooser1_KinectSensorChanged);
+        }
+        public void InitializeExerciseSettings()
+        {
+            exerciseSettings.exerciseVariant = ExerciseVariant.HandRight ;
+            exerciseSettings.isTwistActive = true;
+            exerciseSettings.twistMinAngle = 10;
+            exerciseSettings.twistMaxAngle = 110;
+            exerciseSettings.twistRepetitions = 2;
+            exerciseSettings.twistTolerance = 5;
+            exerciseSettings.isLiftActive = true;
+            exerciseSettings.liftMinHeight = 0;
+            exerciseSettings.liftMaxHeight = 15;
+            exerciseSettings.liftRepetitions = 3;
+            exerciseSettings.liftTolerance = 4;
+            exerciseSettings.isPushingActive = true;
+            exerciseSettings.pushingMinDistance = 10;
+            exerciseSettings.pushingMaxDistance = 35;
+            exerciseSettings.pushingTolerance = 3;
+            exerciseSettings.pushingRepetitions = 3;
+        }
+
+        RepetitionCounter repetitionCounter = new RepetitionCounter();
+        int CountRepetitionsLeft()
+        {
+            int repetitionsLeft = 
+                (exerciseSettings.isTwistActive ? exerciseSettings.twistRepetitions - repetitionCounter.twistsDone : 0) +
+                (exerciseSettings.isLiftActive ? exerciseSettings.liftRepetitions - repetitionCounter.liftsDone : 0) + 
+                (exerciseSettings.isPushingActive ? exerciseSettings.pushingRepetitions - repetitionCounter.pushesDone : 0);
+            return repetitionsLeft;
+        }
+
+        static ExerciseType exerciseType;
+        bool exerciseChanged = true;
+        private void ExerciseHandler(Skeleton skeleton)
+        {
+            if (exerciseChanged)
+            {
+                exerciseChanged = false;
+                SetExerciseType();
+            }
+            ExerciseVariant exerciseVariant = exerciseSettings.exerciseVariant;
+            Rescale(skeleton, exerciseVariant);
+            DisplayMessages(skeleton, exerciseVariant);
+            UpdateLabels(skeleton, exerciseVariant);
+        }
+        void SetExerciseType()
+        {
+            exerciseChanged = true;
+            switch (exerciseType)
+            {
+                case ExerciseType.Lift:
+                    if (exerciseSettings.isPushingActive)
+                    {
+                        exerciseType = ExerciseType.Push;
+                        break;
+                    }
+                    else
+                    {
+                        goto case ExerciseType.Push;
+                    }
+
+                case ExerciseType.Push:
+                    if (exerciseSettings.isTwistActive)
+                    {
+                        exerciseType = ExerciseType.Twist;
+                        break;
+                    }
+                    else
+                    {
+                        goto case ExerciseType.Twist;
+                    }
+                case ExerciseType.Twist:
+                    if (exerciseSettings.isLiftActive)
+                    {
+                        exerciseType = ExerciseType.Lift;
+                        break;
+                    }
+                    else
+                    {
+                        goto case ExerciseType.Lift;
+                    }
+            }
         }
 
         void kinectSensorChooser1_KinectSensorChanged(object sender, DependencyPropertyChangedEventArgs e)
@@ -66,29 +182,17 @@ namespace WinTheMove.Boxing
 
             var parameters = new TransformSmoothParameters
             {
-                /* little smoothing
-                Smoothing = 0.5f,
-                Correction = 0.5f,
-                Prediction = 0.5f,
-                JitterRadius = 0.05f,
-                MaxDeviationRadius = 0.04f
-                */
 
-                Smoothing = 0.5f,
                 Correction = 0.5f,
                 Prediction = 0.5f,
                 JitterRadius = 1.00f,
                 MaxDeviationRadius = 0.4f
             };
+            
             sensor.SkeletonStream.Enable(parameters);
-
-            // sensor.SkeletonStream.Enable();
-
             sensor.AllFramesReady += new EventHandler<AllFramesReadyEventArgs>(sensor_AllFramesReady);
-            // sensor.DepthStream.Enable(DepthImageFormat.Resolution640x480Fps30);
             sensor.DepthStream.Enable(DepthImageFormat.Resolution320x240Fps30);
             sensor.DepthFrameReady += DepthFrameReady;
-            // sensor.ColorStream.Enable(ColorImageFormat.RgbResolution640x480Fps30);
 
             try
             {
@@ -117,21 +221,13 @@ namespace WinTheMove.Boxing
 
             ExerciseVariant exercisevariant = ExerciseVariant.HandRight;
 
-            SetObjectToDestroy();
-            Rescale(first, exercisevariant);
-
-            UpdateLabels(first, exercisevariant);
+            ExerciseHandler(first);
             // UpdatePosition(first, exercisevariant);
         }
 
-        void SetObjectToDestroy()
-        {
-            Ellipse objectToDestroy = new Ellipse();
 
-        }
-
-
-        private Joint GetGloveJoint(Skeleton skeleton, ExerciseVariant exercisevariant)
+        /*
+        static public Joint GetGloveJoint(Skeleton skeleton, ExerciseVariant exercisevariant)
         {
             Joint scaledJoint;
 
@@ -148,7 +244,9 @@ namespace WinTheMove.Boxing
 
             return scaledJoint;
         }
+        */
 
+        /*
         private Joint GetShoulderJoint(Skeleton skeleton, ExerciseVariant exercisevariant)
         {
             Joint scaledJoint;
@@ -166,10 +264,11 @@ namespace WinTheMove.Boxing
 
             return scaledJoint;
         }
+        */
         double shiftFromLeft;
         double protruding;
 
-        private double getPlayerRotationAngle(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        static public double getPlayerRotationAngle(Skeleton skeleton, ExerciseVariant exerciseVariant)
         {
             Joint ShoulderLeft = skeleton.Joints[JointType.ShoulderLeft];
             Joint ShoulderRight = skeleton.Joints[JointType.ShoulderRight];
@@ -179,6 +278,32 @@ namespace WinTheMove.Boxing
             return playerRotationAngle;
         }
 
+        private bool IsPlayerTurnedSideways(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        {
+            double rotationAngle = getPlayerRotationAngle(skeleton, exerciseVariant);
+            double tolerance = 30.0f / 180 * Math.PI;
+            Joint ShoulderLeft = skeleton.Joints[JointType.ShoulderLeft];
+            Joint ShoulderRight = skeleton.Joints[JointType.ShoulderRight];
+            bool isTracked = ShoulderLeft.TrackingState == JointTrackingState.Tracked && ShoulderRight.TrackingState == JointTrackingState.Tracked;
+            return (rotationAngle > tolerance || rotationAngle < (-1) * tolerance) && !isTracked;
+
+        }
+
+        private void DisplayMessages(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        {
+            if (IsPlayerTurnedSideways(skeleton, exerciseVariant))
+            {
+                warningBox.Visibility = System.Windows.Visibility.Visible;
+            }
+            else
+            {
+                warningBox.Visibility = System.Windows.Visibility.Hidden;
+            }
+
+        }
+
+
+        /*
         private double getProtrudingDistance(Skeleton skeleton, ExerciseVariant exerciseVariant)
         {
             Joint handJoint = GetGloveJoint(skeleton, exerciseVariant);
@@ -186,8 +311,10 @@ namespace WinTheMove.Boxing
             double protrudingLength = Math.Abs(MathsHelper.DistanceBetweenPoints(shoulderJoint, handJoint, Axis.X, Axis.Z));
             return protrudingLength;
         }
+        */
 
-        private double getHandHorizontalPositon(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        /*
+        public double getHandHorizontalPositon(Skeleton skeleton, ExerciseVariant exerciseVariant)
         {
             double protrudingLength = getProtrudingDistance(skeleton, exerciseVariant);
 
@@ -201,71 +328,30 @@ namespace WinTheMove.Boxing
                 angle = getHorizonatalAngle(skeleton, exerciseVariant);
             }
             double positionX = - (protrudingLength * Math.Cos(angle/180*Math.PI));
-            textInfo1.Text = "debug\n" + positionX;
+            // textInfo1.Text = "debug\n" + positionX + "\nangle: " + getPlayerRotationAngle(skeleton, exerciseVariant);
             return positionX;
         }
+        */
 
-        private void UpdatePosition(Skeleton skeleton, ExerciseVariant exerciseVariant)
+        /*
+        static public double getVerticalPosition(Skeleton skeleton, ExerciseVariant exerciseVariant)
         {
-            Joint ShoulderLeft = skeleton.Joints[JointType.ShoulderLeft];
-            Joint ShoulderRight = skeleton.Joints[JointType.ShoulderRight];
-            Joint ShoulderCenter = skeleton.Joints[JointType.ShoulderCenter];
-            Joint handJoint = GetGloveJoint(skeleton, exerciseVariant);
-            Joint shoulderJoint = GetShoulderJoint(skeleton, exerciseVariant);
-            double hypotenuseLength = Math.Abs(MathsHelper.DistanceBetweenPoints(ShoulderLeft, ShoulderRight, Axis.X, Axis.Z));
-            double oppositeSideLength = MathsHelper.DistanceBetweenPoints(ShoulderLeft, ShoulderRight, Axis.Z);
-            double playerRotationAngle = Math.Asin(oppositeSideLength / hypotenuseLength);// / Math.PI * 180;
-            double protrudingLength = Math.Abs(MathsHelper.DistanceBetweenPoints(shoulderJoint, handJoint, Axis.X, Axis.Z));
-            double angle;
-            double armLength = 0.6f;
-            int leftDisplayMargin = 100;
-            int rightDisplayMargin = 100;
-            int centimetersPerMeter = 100;
-            if (exerciseVariant == ExerciseVariant.HandRight)
-            {
-                angle = 180 - getHorizonatalAngle(skeleton, exerciseVariant);
-            }
-            else
-            {
-                angle = getHorizonatalAngle(skeleton, exerciseVariant);
-            }
-            // double positionX = (protrudingLength * angle);
-            double positionX = (protrudingLength * angle) / armLength / centimetersPerMeter * (windowSizeX - leftDisplayMargin - rightDisplayMargin) + leftDisplayMargin;
-            textInfo1.Text = "protruding: " + protrudingLength + "\nposX: " + positionX + "\nrot: " + playerRotationAngle;
-            shiftFromLeft = positionX;
-            protruding = protrudingLength;
-/*
-            // textInfo1.Text = "hyp: " + hypotenuseLength + "\nopp: " + oppositeSideLength + "\nrot: " + playerRotationAngle;
-
-            double xShift = MathsHelper.DistanceBetweenPoints(handJoint, ShoulderCenter, Axis.X);
-            double zShift = MathsHelper.DistanceBetweenPoints(ShoulderCenter, handJoint, Axis.Z);
-            pushedForward = zShift * Math.Cos(playerRotationAngle) - xShift * Math.Sin(playerRotationAngle);
-           // pushedForward = zShift - xShift / Math.Tan(pl)
-            double temp1 = pushedForward / Math.Cos(playerRotationAngle);
-            double temp2 = zShift - temp1;
-            double temp3 = Math.Sqrt(temp2 * temp2 + xShift * xShift);
-            // double temp4 = Math.Sqrt(temp1 * temp1 + pushedForward * pushedForward - 2 * temp1 * pushedForward * Math.Cos(playerRotationAngle));
-            double temp4 = Math.Sqrt(temp1 * temp1 - pushedForward * pushedForward);
-            double realShift = temp3 + temp4;
-
-            textInfo1.Text += "\nxShift: " + xShift;
-            textInfo1.Text += "\nyShift: " + zShift;
-            textInfo1.Text += "\nforward: " + pushedForward;
-            textInfo1.Text += "\nshift: " + realShift;
-            */
-
-
+            Joint gloveJoint = GetGloveJoint(skeleton, exerciseVariant);
+            const double posYCorrection = -0.2f;
+            double diffY = gloveJoint.Position.Y - skeleton.Joints[JointType.ShoulderCenter].Position.Y + posYCorrection;
+            return diffY;
         }
+        */
 
         private void Rescale(Skeleton skeleton, ExerciseVariant exerciseVariant)
         {
-
+            hand.UpdatePosition(skeleton, exerciseVariant);
+            /*
             Joint scaledJoint = GetGloveJoint(skeleton, exerciseVariant);
 
             const double scaleX = 1.0; // range of move
             double scaleY = 1.0 * (Convert.ToDouble(windowSizeY)/Convert.ToDouble(windowSizeX)); // range of move
             
-            double diffX = 0;
             double diffY = 0;
             int posX = 0;
             int posY = 0;
@@ -273,27 +359,15 @@ namespace WinTheMove.Boxing
             double armLength = 0.6f;
             int leftDisplayMargin = 100;
             int rightDisplayMargin = 100;
-            int centimetersPerMeter = 100;
             double horizontalPosition = getHandHorizontalPositon(skeleton, exerciseVariant);
+
             posX = Convert.ToInt32((horizontalPosition + armLength/2)/ armLength * (windowSizeX - leftDisplayMargin - rightDisplayMargin) + leftDisplayMargin);
-            /*
-            if (exercisevariant == ExerciseVariant.HandRight)
-            {
-                diffX = scaledJoint.Position.X - skeleton.Joints[JointType.ShoulderCenter].Position.X;
-                posX = 2 * Convert.ToInt32(scaleX * diffX * Convert.ToDouble(windowSizeX));
-            }
-            else
-            {
-                diffX = scaledJoint.Position.X - skeleton.Joints[JointType.ShoulderCenter].Position.X;
-                posX = 2 * Convert.ToInt32(scaleX * diffX * Convert.ToDouble(windowSizeX)) + windowSizeX / 2;
-            }
-            */
             diffY = scaledJoint.Position.Y - skeleton.Joints[JointType.ShoulderCenter].Position.Y + posYCorrection;
             posY = Convert.ToInt32(-2.0 * scaleY * diffY * Convert.ToDouble(windowSizeY));
 
             double handMaxSize = 250; // pixels
-            double handMaxPutForward = 0.5f; // meters
-            double handMaxPutForwardPercentageSize = 0.5f; // percent / 100
+            double handMaxPutForward = 0.4f; // meters
+            double handMaxPutForwardPercentageSize = 0.5f; // percent / 100, size of image during push
             double handMinSize = handMaxPutForwardPercentageSize * handMaxSize;
             double slope = (handMinSize - handMaxSize) / handMaxPutForward;
 
@@ -303,9 +377,11 @@ namespace WinTheMove.Boxing
 
             Canvas.SetLeft(HandImage, posX - HandImage.Width / 2);
             Canvas.SetTop(HandImage, posY - HandImage.Width / 2); 
+            */
         }
 
 
+        /*
         private double getHorizonatalAngle(Skeleton skeleton, ExerciseVariant exercisevarinat)
         {
             Joint centerPoint, leftPoint, rightPoint;
@@ -323,40 +399,12 @@ namespace WinTheMove.Boxing
                     rightPoint = skeleton.Joints[JointType.HandRight];
                     break;
             }
-        /*
-            textInfo1.Text = "left\n";
-            textInfo1.Text += leftPoint.Position.X + "\n";
-            textInfo1.Text += leftPoint.Position.Y + "\n";
-            textInfo1.Text += leftPoint.Position.Z + "\n";
-            textInfo2.Text = "center\n";
-            textInfo2.Text += centerPoint.Position.X + "\n";
-            textInfo2.Text += centerPoint.Position.Y + "\n";
-            textInfo2.Text += centerPoint.Position.Z + "\n";
-            textInfo3.Text = "right\n";
-            textInfo3.Text += rightPoint.Position.X + "\n";
-            textInfo3.Text += rightPoint.Position.Y + "\n";
-            textInfo3.Text += rightPoint.Position.Z + "\n";
 
-            */
             return -1 * (MathsHelper.AngleBetweenJoints(leftPoint, centerPoint, rightPoint, Axis.X, Axis.Z) - 180); // 0 when straight angle, increase when twisting
         }
+        */
+ 
         /*
-        private double getHorizonatalAngle(Skeleton skeleton, ExerciseVariant exerciseVariant)
-        {
-            Joint handJoint = GetGloveJoint(skeleton, exerciseVariant);
-            Joint shoulderJoint = GetShoulderJoint(skeleton, exerciseVariant);
-            double hypotenuseLength = Math.Abs(MathsHelper.DistanceBetweenPoints(shoulderJoint, handJoint, Axis.X, Axis.Z));
-            double oppositeSideLength = MathsHelper.DistanceBetweenPoints(shoulderJoint, handJoint, Axis.X);
-            double playerRotationAngle = getPlayerRotationAngle(skeleton, exerciseVariant);
-            int shift = (handJoint.Position.X - shoulderJoint.Position.X < 0) ? -1 : 0;// negative if in II quater
-            double ratio = oppositeSideLength / hypotenuseLength ;
-            ratio = ratio < -1 ? -1 : ratio;
-            ratio = ratio > 1 ? 1 : ratio;
-            double horizontalAngle = Math.Acos(ratio);
-            textInfo1.Text = "\n" + hypotenuseLength + "\n" + oppositeSideLength + "\n" + playerRotationAngle + "\n" + oppositeSideLength/hypotenuseLength + "\n" + horizontalAngle;
-            return (horizontalAngle) / Math.PI * 180;
-        }
-       */
         private double getWirstShoulderDistance(Skeleton skeleton, ExerciseVariant exercisevarinat, Axis axis)
         {
             Joint firstPoint, secondPoint;
@@ -375,14 +423,14 @@ namespace WinTheMove.Boxing
 
             return MathsHelper.DistanceBetweenPoints(firstPoint, secondPoint, axis) ;
         }
+        */
 
         private void UpdateLabels(Skeleton skeleton, ExerciseVariant exercisevariant)
         {
-            // textInfo1.Text= getHorizonatalAngle(first, ExerciseVariant.HandRight).ToString() + "\n" +
-              //  getHigh(first, ExerciseVariant.HandRight);
-            horizontalDistanceLabel.Content = String.Format("{0:0.0} cm", getWirstShoulderDistance(skeleton, exercisevariant, Axis.Z) * 100);
-            verticalDistanceLabel.Content = String.Format("{0:0.0} cm", getWirstShoulderDistance(skeleton, exercisevariant, Axis.Y) * -100);
-            angleLabel.Content = String.Format("{0:0}°", getHorizonatalAngle(skeleton, exercisevariant)); // 0, 2, 4, ...
+            horizontalDistanceLabel.Content = String.Format("{0:0.0} cm", hand.getProtrudingDistance(skeleton, exercisevariant) * 100);
+            verticalDistanceLabel.Content = String.Format("{0:0.0} cm", hand.getLiftDistance(skeleton, exercisevariant) * -100);
+            angleLabel.Content = String.Format("{0:0}°", hand.getHorizonatalAngle(skeleton, exercisevariant)); // 0, 2, 4, ...
+            RepetitionsCounter.Text = CountRepetitionsLeft().ToString();
         }
 
 
@@ -394,7 +442,6 @@ namespace WinTheMove.Boxing
                 {
                     return null; 
                 }
-
                 
                 skeletonFrameData.CopySkeletonDataTo(allSkeletons);
 
@@ -402,7 +449,6 @@ namespace WinTheMove.Boxing
                 Skeleton first = (from s in allSkeletons
                                          where s.TrackingState == SkeletonTrackingState.Tracked
                                          select s).FirstOrDefault();
-
                 return first;
 
             }
@@ -450,30 +496,6 @@ namespace WinTheMove.Boxing
             
         }
 
-        Bitmap DepthToBitmap(DepthImageFrame imageFrame)
-        {
-            short[] pixelData = new short[imageFrame.PixelDataLength];
-            imageFrame.CopyPixelDataTo(pixelData);
-
-            Bitmap bmap = new Bitmap(
-            imageFrame.Width,
-            imageFrame.Height,
-            System.Drawing.Imaging.PixelFormat.Format16bppRgb555);
-
-            BitmapData bmapdata = bmap.LockBits(
-             new System.Drawing.Rectangle(0, 0, imageFrame.Width,
-                                    imageFrame.Height),
-             ImageLockMode.WriteOnly,
-             bmap.PixelFormat);
-            IntPtr ptr = bmapdata.Scan0;
-            Marshal.Copy(pixelData,
-             0,
-             ptr,
-             imageFrame.Width *
-               imageFrame.Height);
-            bmap.UnlockBits(bmapdata);
-            return bmap;
-        }
         BitmapSource DepthToBitmapSource(
                 DepthImageFrame imageFrame)
         {
@@ -507,6 +529,5 @@ namespace WinTheMove.Boxing
             closing = true; 
             StopKinect(kinectSensorChooser1.Kinect); 
         }
-
     }
 }

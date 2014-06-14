@@ -228,8 +228,6 @@ namespace Microsoft.Samples.Kinect.ControlBasics
         }
         private void RunGame()
         {
-	    // System.Diagnostics.Process.Start( @"C:\Windows\System32\Notepad.exe" );
-	    // System.Diagnostics.Process.Start(@"F:\team project\code\WinTheMove\Games\Boxing\bin\Debug\SkeletalTracking.exe");
 	    System.Diagnostics.Process.Start(@".\Boxing.exe");
             Application.Current.Shutdown();
         }

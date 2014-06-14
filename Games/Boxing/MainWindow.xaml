@@ -7,17 +7,22 @@
         xmlns:my="clr-namespace:Microsoft.Samples.Kinect.WpfViewers;assembly=Microsoft.Samples.Kinect.WpfViewers" 
         Closing="Window_Closing" >
     <Grid x:Name="theGrid">
-        <Canvas Height="570" VerticalAlignment="Top">
+        <Canvas x:Name="GameArea" Height="570" VerticalAlignment="Top">
             <Canvas.Background>
                 <ImageBrush ImageSource="Resources/bg2.jpg"/>
             </Canvas.Background>
             <Image x:Name="dephPreview" Height="93" Canvas.Left="42" Canvas.Top="446" Width="136" Opacity="0.3"/>
-            <Rectangle  Height="130" Width="130" x:Name="ObjectToDestroyImage" Canvas.Left="160" Canvas.Top="227" RenderTransformOrigin="0.433,0.28">
+            <Rectangle  Height="130" Width="130" x:Name="ObjectToDestroyImage" Canvas.Left="111" Canvas.Top="192" >
                 <Rectangle.Fill>
                     <ImageBrush ImageSource="Resources/orange.png" />
                 </Rectangle.Fill>
             </Rectangle>
-            <Ellipse Height="250" Width="250" x:Name="HandImage" Canvas.Left="485" Canvas.Top="107" RenderTransformOrigin="0.433,0.28">
+            <Rectangle  Height="130" Width="130" x:Name="SmashedOrange" Canvas.Left="558" Canvas.Top="186" RenderTransformOrigin="0.433,0.28">
+                <Rectangle.Fill>
+                    <ImageBrush ImageSource="Resources/smashed.png" />
+                </Rectangle.Fill>
+            </Rectangle>
+            <Ellipse Height="250" Width="250" x:Name="HandImage" Canvas.Left="371" Canvas.Top="186" RenderTransformOrigin="0.433,0.28">
                 <Ellipse.Fill>
                     <ImageBrush ImageSource="/Resources/glove.png" />
                 </Ellipse.Fill>
@@ -27,8 +32,8 @@
             <Ellipse Height="30" Width="30" Name="Head" Canvas.Left="373" Canvas.Top="133" Fill="Red" />
             -->
 
-            <my:KinectSensorChooser Canvas.Left="42" Canvas.Top="258" Name="kinectSensorChooser1" Width="693" Height="211" Visibility="Hidden" />
-            <TextBlock x:Name="textInfo1" Height="199" Canvas.Left="10" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="388" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4"/>
+            <my:KinectSensorChooser Canvas.Left="213" Canvas.Top="5" Name="kinectSensorChooser1" Width="579" Height="176" Opacity="0.5" Visibility="Hidden" />
+            <TextBlock x:Name="textInfo1" Height="177" Canvas.Left="10" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="345" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Visible"/>
             <TextBlock x:Name="textInfo2" Height="102" Canvas.Left="141" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="126" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Hidden"/>
             <TextBlock x:Name="textInfo3" Height="102" Canvas.Left="271" TextWrapping="Wrap" Text="Instructions" Canvas.Top="10" Width="127" FontSize="16" FontFamily="Consolas" Background="#FFF1DBDB" Opacity="0.4" Visibility="Hidden"/>
             <Canvas Height="161" Canvas.Left="585" Canvas.Top="399" Width="182" HorizontalAlignment="Right" VerticalAlignment="Bottom">
@@ -37,6 +42,12 @@
                 <Label x:Name="verticalDistanceLabel" Content="10.0 cm" Canvas.Top="10" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Canvas.Left="45" Foreground="#FFFFE295"/>
                 <Label x:Name="horizontalDistanceLabel" Content="15.0 cm" Canvas.Top="114" FontSize="24" FontFamily="Segoe UI Semibold" RenderTransformOrigin="0.328,0.741" Canvas.Left="105" Background="{x:Null}" Foreground="#FFFFE295"/>
             </Canvas>
+            <Canvas x:Name="warningBox" Height="100" Canvas.Left="417" Canvas.Top="27" Width="350" Visibility="Hidden">
+                <Image Height="100" Width="100" Source="Resources/warning-icon.png"/>
+                <TextBlock Canvas.Left="105" TextWrapping="Wrap" Canvas.Top="10" Height="80" Width="235"><Run Foreground="#FFE6D41F" FontWeight="Bold" FontSize="18" Text="You're turned sideways"/><Run Foreground="#FFE6D41F" FontWeight="Bold" FontSize="18" Language="pl-pl" Text="."/><Span Foreground="Black" FontSize="12" FontFamily="Segoe UI" Language="en-us"><Run Foreground="#FFE6D41F" FontWeight="Bold" FontSize="18"/><LineBreak/></Span><Run Foreground="#FFE6D41F" FontWeight="Bold" FontSize="18" Text="Information about position"/><LineBreak/><Run Foreground="#FFE6D41F" FontWeight="Bold" FontSize="18" Text="may be incorrect"/><Run Language="pl-pl" Text="."/><Span Foreground="Black" FontSize="12" FontFamily="Segoe UI" Language="en-us"><LineBreak/></Span></TextBlock>
+            </Canvas>
+            <TextBlock Canvas.Left="77" TextWrapping="Wrap" Text="Repetitions Left:" Canvas.Top="27" FontSize="36" FontWeight="Bold" Foreground="#FFFFE295" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+            <TextBlock x:Name="RepetitionsCounter" Canvas.Left="371" TextWrapping="Wrap" Canvas.Top="10" FontSize="72" FontWeight="Bold" Foreground="#FFFFE295" VerticalAlignment="Center" HorizontalAlignment="Center" Width="86" Height="102"><Run Language="pl-pl" Text="10"/></TextBlock>
 
         </Canvas>
     </Grid>
